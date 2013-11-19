@@ -34,6 +34,14 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite
         ISQLiteConnection Create(string address);
     }
 
+    public interface ISQLiteLoadableObject
+    {
+        /// <summary>
+        /// Returns true if the object is loading from the database
+        /// </summary>
+        bool isLoading { get; set; }
+    }
+
     [Flags]
     public enum CreateFlags
     {
@@ -229,6 +237,8 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite
         void Bind(object val);
     }
 
+    public delegate void OnHandleInstanceCreated(ISQLiteCommand cmd, object instance, Func<int, Type, object> readColumnFunction);
+        
     /// <summary>
     /// Represents an open connection to a SQLite database.
     /// </summary>
@@ -241,6 +251,8 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite
         bool Trace { get; set; }
 
         bool StoreDateTimeAsTicks { get; }
+        
+        event OnHandleInstanceCreated HandleInstanceCreated;
 
         /// <summary>
         /// Sets a busy handler to sleep the specified amount of time when a table is locked.

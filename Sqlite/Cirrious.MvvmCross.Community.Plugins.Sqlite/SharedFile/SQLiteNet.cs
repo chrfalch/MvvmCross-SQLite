@@ -144,6 +144,8 @@ namespace Community.SQLite
 
         public Sqlite3DatabaseHandle Handle { get; private set; }
         internal static readonly Sqlite3DatabaseHandle NullHandle = default(Sqlite3DatabaseHandle);
+        
+        public event OnHandleInstanceCreated HandleInstanceCreated;
 
         public string DatabasePath { get; private set; }
 
@@ -1533,8 +1535,14 @@ namespace Community.SQLite
                 }
             }
         }
-    }
 
+        internal void CallHandleInstanceCreated(ISQLiteCommand cmd, object obj, Func<int, Type, object> readColFuntion)
+        {
+            if (HandleInstanceCreated != null)
+                HandleInstanceCreated(cmd, obj, readColFuntion);
+        }
+    }
+    
     /// <summary>
     /// Represents a parsed connection string.
     /// </summary>
@@ -2012,6 +2020,8 @@ namespace Community.SQLite
             return ExecuteDeferredQuery<T>(map).ToList();
         }
 
+        
+
         /// <summary>
         /// Invoked every time an instance is loaded from the database.
         /// </summary>
@@ -2024,9 +2034,15 @@ namespace Community.SQLite
         ///
         /// Type safety is not possible because MonoTouch does not support virtual generic methods.
         /// </remarks>
-        protected virtual void OnInstanceCreated(object obj)
+        protected virtual void OnInstanceCreated(object obj, Sqlite3Statement stmt)
         {
+            Func<int, Type, object> callback = (int index, Type clrtype) =>
+            {
+                return ReadCol(stmt, index, SQLite3.ColType.Null, clrtype);
+            };
+
             // Can be overridden.
+            _conn.CallHandleInstanceCreated(this, obj, callback);
         }
 
         public IEnumerable<T> ExecuteDeferredQuery<T>(ITableMapping map)
@@ -2050,6 +2066,11 @@ namespace Community.SQLite
                 while (SQLite3.Step(stmt) == SQLite3.Result.Row)
                 {
                     var obj = Activator.CreateInstance(((TableMapping)map).MappedType);
+
+                    var loadable = obj as ISQLiteLoadableObject;
+                    if (loadable != null)
+                        loadable.isLoading = true;
+
                     for (int i = 0; i < cols.Length; i++)
                     {
                         if (cols[i] == null)
@@ -2058,7 +2079,12 @@ namespace Community.SQLite
                         var val = ReadCol(stmt, i, colType, cols[i].ColumnType);
                         cols[i].SetValue(obj, val);
                     }
-                    OnInstanceCreated(obj);
+                    
+                    OnInstanceCreated(obj, stmt);
+
+                    if (loadable != null)
+                        loadable.isLoading = false;
+
                     yield return (T)obj;
                 }
             }
@@ -2067,6 +2093,7 @@ namespace Community.SQLite
                 SQLite3.Finalize(stmt);
             }
         }
+
 
         public T ExecuteScalar<T>()
         {
@@ -2243,11 +2270,11 @@ namespace Community.SQLite
 
         object ReadCol(Sqlite3Statement stmt, int index, SQLite3.ColType type, Type clrType)
         {
-            if (type == SQLite3.ColType.Null)
+            /*if (type == SQLite3.ColType.Null)
             {
                 return null;
             }
-            else
+            else*/
             {
                 if (clrType == typeof(String))
                 {
