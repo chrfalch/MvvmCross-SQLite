@@ -2060,6 +2060,9 @@ namespace Community.SQLite
                 for (int i = 0; i < cols.Length; i++)
                 {
                     var name = SQLite3.ColumnName16(stmt, i);
+                    if (cols.Any(c => c != null && c.Name == name))
+                        continue;
+
                     cols[i] = ((TableMapping)map).FindColumn(name);
                 }
 
