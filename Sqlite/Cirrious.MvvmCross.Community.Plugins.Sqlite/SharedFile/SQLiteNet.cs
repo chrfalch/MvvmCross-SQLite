@@ -200,10 +200,12 @@ namespace Community.SQLite
 #if SILVERLIGHT || USE_CSHARP_SQLITE
             var r = SQLite3.Open(databasePath, out handle, (int)openFlags, IntPtr.Zero);
 #else
+			SQLite3.Config(Community.SQLite.SQLite3.ConfigOption.Serialized); // Serialized
+
             // open using the byte[]
             // in the case where the path may include Unicode
             // force open to using UTF-8 using sqlite3_open_v2
-            var databasePathAsBytes = GetNullTerminatedUtf8(DatabasePath);
+			var databasePathAsBytes = GetNullTerminatedUtf8(DatabasePath);
             var r = SQLite3.Open(databasePathAsBytes, out handle, (int)openFlags, IntPtr.Zero);
 #endif
 
