@@ -7,8 +7,8 @@
 // THIS FILE FULLY ACKNOWLEDGES:
 
 
-
-
+using System.IO;
+using Windows.Storage;
 // ReSharper disable all
 //
 // Copyright (c) 2009-2012 Krueger Systems, Inc.
@@ -35,7 +35,6 @@
 #if WINDOWS_PHONE && !USE_CSHARP_SQLITE
 #warning NOTE THAT THIS CODE NOW USES http://www.sqlite.org/download.html#wp8 NOT CSHARP_SQLITE
 #endif
-
 using System;
 using System.Globalization;
 using System.Collections.Generic;
@@ -51,13 +50,12 @@ using Cirrious.MvvmCross.Community.Plugins.Sqlite;
 using Community.CsharpSqlite;
 using Sqlite3DatabaseHandle = Community.CsharpSqlite.Sqlite3.sqlite3;
 using Sqlite3Statement = Community.CsharpSqlite.Sqlite3.Vdbe;
-/*
+
 #elif WINDOWS_PHONE
-using Sqlite = SQLite;
-using Sqlite3 = SQLite.SQLite3;
-using Sqlite3DatabaseHandle = System.IntPtr;
-using Sqlite3Statement = System.IntPtr;
-*/
+using Sqlite3 = Sqlite.Sqlite3;
+using Sqlite3DatabaseHandle = Sqlite.Database;
+using Sqlite3Statement = Sqlite.Statement;
+
 #else
 using System.Runtime.InteropServices;
 using Sqlite3DatabaseHandle = System.IntPtr;
@@ -3205,19 +3203,25 @@ namespace Community.SQLite
         public static Result Open(string filename, out Sqlite3DatabaseHandle db)
         {
 #if WINDOWS_PHONE
+#if USE_CSHARP_SQLITE
             var d = new Sqlite3DatabaseHandle();
             var toReturn = (Result)Sqlite3.sqlite3_open(filename, ref d);
             db = d;
             return toReturn;
+#elif USE_WP8_NATIVE_SQLITE
+            var path = Path.Combine(ApplicationData.Current.LocalFolder.Path, filename);
+            return (Result)Sqlite3.sqlite3_open(path, out db);
 #else
             return (Result)Sqlite3.sqlite3_open(filename, out db);
+#endif
 #endif
         }
 
         public static Result Open(string filename, out Sqlite3DatabaseHandle db, int flags, IntPtr zVfs)
         {
 #if USE_WP8_NATIVE_SQLITE
-            return (Result)Sqlite3.sqlite3_open_v2(filename, out db, flags, "");
+            var path = Path.Combine(ApplicationData.Current.LocalFolder.Path, filename);
+            return (Result)Sqlite3.sqlite3_open_v2(path, out db, flags, "");
 #else
 #if WINDOWS_PHONE
             var d = new Sqlite3DatabaseHandle();
@@ -3273,7 +3277,7 @@ namespace Community.SQLite
 
         public static Result Finalize(Sqlite3Statement stmt)
         {
-#if WINDOWS_PHONE
+#if WINDOWS_PHONE && USE_CSHARP_SQLITE
             return (Result)Sqlite3.sqlite3_finalize(ref stmt);
 #else
             return (Result)Sqlite3.sqlite3_finalize(stmt);
