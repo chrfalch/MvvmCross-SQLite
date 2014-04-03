@@ -8,7 +8,7 @@
 
 
 using System.IO;
-using Windows.Storage;
+
 // ReSharper disable all
 //
 // Copyright (c) 2009-2012 Krueger Systems, Inc.
@@ -34,6 +34,7 @@ using Windows.Storage;
 
 #if WINDOWS_PHONE && !USE_CSHARP_SQLITE
 #warning NOTE THAT THIS CODE NOW USES http://www.sqlite.org/download.html#wp8 NOT CSHARP_SQLITE
+using Windows.Storage;
 #endif
 using System;
 using System.Globalization;
