@@ -199,7 +199,9 @@ namespace Community.SQLite
 #if SILVERLIGHT || USE_CSHARP_SQLITE
             var r = SQLite3.Open(databasePath, out handle, (int)openFlags, IntPtr.Zero);
 #else
+			SQLite3.Shutdown();
 			SQLite3.Config(Community.SQLite.SQLite3.ConfigOption.Serialized); // Serialized
+			SQLite3.Initialize();
 
             // open using the byte[]
             // in the case where the path may include Unicode
@@ -3085,6 +3087,12 @@ namespace Community.SQLite
 
 [DllImport("sqlite3", EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
         public static extern Result Config(ConfigOption option);
+
+[DllImport("sqlite3", EntryPoint = "sqlite3_shutdown", CallingConvention = CallingConvention.Cdecl)]
+	public static extern Result Shutdown();
+
+[DllImport("sqlite3", EntryPoint = "sqlite3_initialize", CallingConvention = CallingConvention.Cdecl)]
+	public static extern Result Initialize();
 
 [DllImport("sqlite3", EntryPoint = "sqlite3_win32_set_directory", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
         public static extern int SetDirectory(uint directoryType, string directoryPath);
