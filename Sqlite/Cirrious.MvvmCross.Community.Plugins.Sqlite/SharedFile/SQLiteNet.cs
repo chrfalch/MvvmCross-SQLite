@@ -513,10 +513,24 @@ namespace Community.SQLite
             CreateIndex(map.TableName, colName, unique);
         }
 
+		private static Dictionary<string, List<ColumnInfo>> _tableInfoCache = new 
+			Dictionary<string, List<ColumnInfo>>();
+
+			private static object _tableInfoCacheLock = new object();
+
         public List<ColumnInfo> GetTableInfo(string tableName)
         {
-            var query = "pragma table_info(\"" + tableName + "\")";
-            return Query<ColumnInfo>(query);
+    		lock(_tableInfoCacheLock)
+    		{
+				if (!_tableInfoCache.ContainsKey (tableName)) 
+				{
+					var query = "pragma table_info(\"" + tableName + "\")";
+					var info = Query<ColumnInfo> (query);			
+					_tableInfoCache.Add (tableName, info);
+				}
+
+				return _tableInfoCache [tableName];
+			}
         }
 
         void MigrateTable(TableMapping map)
