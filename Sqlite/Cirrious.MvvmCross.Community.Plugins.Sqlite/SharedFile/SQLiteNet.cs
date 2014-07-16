@@ -516,21 +516,20 @@ namespace Community.SQLite
 		private static Dictionary<string, List<ColumnInfo>> _tableInfoCache = new 
 			Dictionary<string, List<ColumnInfo>>();
 
-			private static object _tableInfoCacheLock = new object();
+		private static object _tableInfoCacheLock = new object();
 
         public List<ColumnInfo> GetTableInfo(string tableName)
-        {
-    		lock(_tableInfoCacheLock)
-    		{
-				if (!_tableInfoCache.ContainsKey (tableName)) 
-				{
-					var query = "pragma table_info(\"" + tableName + "\")";
-					var info = Query<ColumnInfo> (query);			
+        {    	
+			if (!_tableInfoCache.ContainsKey (tableName)) 
+			{
+				var query = "pragma table_info(\"" + tableName + "\")";
+				var info = Query<ColumnInfo> (query);	
+				lock (_tableInfoCacheLock) {
 					_tableInfoCache.Add (tableName, info);
 				}
-
-				return _tableInfoCache [tableName];
 			}
+
+			return _tableInfoCache [tableName];
         }
 
         void MigrateTable(TableMapping map)
