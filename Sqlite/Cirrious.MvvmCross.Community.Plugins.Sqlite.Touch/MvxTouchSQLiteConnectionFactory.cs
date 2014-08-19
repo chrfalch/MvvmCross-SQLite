@@ -23,7 +23,7 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite.Touch
         public ISQLiteConnection CreateEx(string address, SQLiteConnectionOptions options = null)
         {
             options = options ?? new SQLiteConnectionOptions();
-            var path = options.BasePath ?? Environment.GetFolderPath(Environment.SpecialFolder.Personal);Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            var path = options.BasePath ?? Environment.GetFolderPath(Environment.SpecialFolder.Personal);
             var filePath = Path.Combine(path, address);
             return new SQLiteConnection(filePath, options.StoreDateTimeAsTicks);
         }
