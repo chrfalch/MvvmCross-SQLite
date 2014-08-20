@@ -144,8 +144,6 @@ namespace Community.SQLite
         public Sqlite3DatabaseHandle Handle { get; private set; }
         internal static readonly Sqlite3DatabaseHandle NullHandle = default(Sqlite3DatabaseHandle);
         
-        public event OnHandleInstanceCreated HandleInstanceCreated;
-
         public string DatabasePath { get; private set; }
 
         public bool TimeExecution { get; set; }
@@ -1552,11 +1550,6 @@ namespace Community.SQLite
             }
         }
 
-        internal void CallHandleInstanceCreated(ISQLiteCommand cmd, object obj, Func<int, Type, object> readColFuntion)
-        {
-            if (HandleInstanceCreated != null)
-                HandleInstanceCreated(cmd, obj, readColFuntion);
-        }
     }
     
     /// <summary>
@@ -2036,31 +2029,6 @@ namespace Community.SQLite
             return ExecuteDeferredQuery<T>(map).ToList();
         }
 
-        
-
-        /// <summary>
-        /// Invoked every time an instance is loaded from the database.
-        /// </summary>
-        /// <param name='obj'>
-        /// The newly created object.
-        /// </param>
-        /// <remarks>
-        /// This can be overridden in combination with the <see cref="SQLiteConnection.NewCommand"/>
-        /// method to hook into the life-cycle of objects.
-        ///
-        /// Type safety is not possible because MonoTouch does not support virtual generic methods.
-        /// </remarks>
-        protected virtual void OnInstanceCreated(object obj, Sqlite3Statement stmt)
-        {
-            Func<int, Type, object> callback = (int index, Type clrtype) =>
-            {
-                return ReadCol(stmt, index, SQLite3.ColType.Null, clrtype);
-            };
-
-            // Can be overridden.
-            _conn.CallHandleInstanceCreated(this, obj, callback);
-        }
-
         public IEnumerable<T> ExecuteDeferredQuery<T>(ITableMapping map)
         {
             if (_conn.Trace)
@@ -2099,8 +2067,6 @@ namespace Community.SQLite
                         cols[i].SetValue(obj, val);
                     }
                     
-                    OnInstanceCreated(obj, stmt);
-
                     if (loadable != null)
                         loadable.isLoading = false;
 

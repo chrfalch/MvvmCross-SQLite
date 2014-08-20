@@ -237,8 +237,6 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite
         void Bind(object val);
     }
 
-    public delegate void OnHandleInstanceCreated(ISQLiteCommand cmd, object instance, Func<int, Type, object> readColumnFunction);
-        
     /// <summary>
     /// Represents an open connection to a SQLite database.
     /// </summary>
@@ -252,8 +250,6 @@ namespace Cirrious.MvvmCross.Community.Plugins.Sqlite
 
         bool StoreDateTimeAsTicks { get; }
         
-        event OnHandleInstanceCreated HandleInstanceCreated;
-
         /// <summary>
         /// Sets a busy handler to sleep the specified amount of time when a table is locked.
         /// The handler will sleep multiple times until a total time of <see cref="BusyTimeout"/> has accumulated.
